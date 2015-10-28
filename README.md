@@ -3,6 +3,16 @@
 Takes care of the logic to asynchronously submit a MailChimp subscribe form,
 without any extra JS library.
 
+## Installation
+
+Through Bower:
+
+```shell
+bower install --save mailchimp-subscribe-form
+```
+
+…or by downloading [`mailchimp-subscribe-form.js`](mailchimp-subscribe-form.js) manually.
+
 ## Usage
 
 Include mailchimp-subscribe-form.js in your HTML, where
@@ -31,10 +41,10 @@ You can customize your fields on the "Embedded forms" section for your
 MailChimp account.
 -->
 
-<script src="mailchimp-subscribe-form.js"></script>
+<script src="vendor/mailchimp-subscribe-form.js"></script>
 ```
 
-Instantiate MailChimpSubscribeForm for each element:
+Instantiate MailChimpSubscribeForm for each subscription form element:
 
 ```javascript
 var elems = document.querySelectorAll('.js-subscribe-form');
@@ -55,6 +65,8 @@ You can also pass custom options as the second argument to
   translateFunction: function(str) { return str; }  // pass your own translate function if you want translations
 }
 ```
+
+Have a look in [`mailchimp-subscribe-form.js`](mailchimp-subscribe-form.js) for more details on the options you can pass.
 
 Pass your own options object to override.
 
