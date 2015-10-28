@@ -1,0 +1,24 @@
+{
+  "name": "mailchimp-subscribe-form",
+  "main": "mailchimp-subscribe-form.js",
+  "homepage": "https://github.com/eriklindebratt/mailchimp-subscribe-form",
+  "authors": [
+    "Erik Lindebratt <erik.lindebratt@gmail.com>"
+  ],
+  "description": "Takes care of the logic to asynchronously submit a MailChimp subscribe form, without any extra JS library.",
+  "moduleType": [],
+  "keywords": [
+    "mailchimp",
+    "ajax",
+    "async",
+    "asynchronous"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
