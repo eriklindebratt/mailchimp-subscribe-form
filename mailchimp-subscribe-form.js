@@ -1,7 +1,7 @@
 /*!
  * MailChimpSubscribeForm
  *
- * Copyright 2015, Erik Lindebratt
+ * Copyright 2016, Erik Lindebratt
  * Released under the MIT license - http://eriklindebratt.mit-license.org/
  */
 (function(window, document) {
@@ -20,7 +20,9 @@
       jsonpCallbackProperty: 'c',  // change this to whatever MailChimp expects
       successMessageElem: this.formElem_.parentNode.querySelector('.js-success-message'),
       errorMessageElem: this.formElem_.parentNode.querySelector('.js-error-message'),
-      translateFunction: function(str) { return str; }
+      translateFunction: function(str) { return str; },
+      onSuccessCallback: null,
+      onErrorCallback: null
     };
     this.options_.generalSuccessMessage = this.options_.successMessageElem.getAttribute(
       'data-general-message'
@@ -120,7 +122,12 @@
       this.onError_(null, message);
     } else {
       this.setSuccessMessage_(message);
-      this.setUI_(false);
+
+      if (typeof(this.options_.onSuccessCallback) === 'function') {
+        this.options_.onSuccessCallback.call(null, message);
+      } else {
+        this.setUI_(false);
+      }
     }
   };
 
@@ -131,7 +138,12 @@
    */
   MailChimpSubscribeForm.prototype.onError_ = function(request, errorMessage) {
     this.setErrorMessage_(errorMessage);
-    this.setUI_(true);
+
+    if (typeof(this.options_.onErrorCallback) === 'function') {
+      this.options_.onErrorCallback.call(null, request, errorMessage);
+    } else {
+      this.setUI_(true);
+    }
   };
 
   /**
@@ -207,7 +219,7 @@
         }
 
         var value = inputElem.value;
-        if (inputElem.type === 'checkbox' || inputElem.type === 'radio') {
+        if (!inputElem.hasAttribute('value') && (inputElem.type === 'checkbox' || inputElem.type === 'radio')) {
           value = !!inputElem.checked;
         }
         data[inputElem.name] = encodeURIComponent(value);
