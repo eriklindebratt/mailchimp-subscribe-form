@@ -63,8 +63,12 @@ You can also pass custom options as the second argument to
   successMessageElem: this.formElem_.parentNode.querySelector('.js-success-message'),
   errorMessageElem: this.formElem_.parentNode.querySelector('.js-error-message'),
   translateFunction: function(str) { return str; },  // pass your own translate function if you want translations
-  onSuccessCallback: null,  // pass your own success callback to handle a successful submit yourself
-  onErrorCallback: null  // pass your own error callback to handle submit errors yourself
+  onSuccessCallback: null,  // pass your own success callback to handle successful submits yourself
+  onErrorCallback: null,  // pass your own error callback to handle submit errors yourself
+  onBeforeSubmitCallback: null,  // for e.g. setting loading state
+  onTimeoutCallback: null,  // for JSONP calls we don't get any error handling, so you can use this as "fallback"
+  timeout: 5000,
+  autoInit: false
 }
 ```
 

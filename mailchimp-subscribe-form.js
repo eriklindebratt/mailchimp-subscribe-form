@@ -15,21 +15,45 @@
    */
   var MailChimpSubscribeForm = function(formElem, customOptions) {
     this.formElem_ = formElem;
+    this.timeoutObj_ = null;
     this.options_ = {
       url: this.formElem_.getAttribute('data-url') || this.formElem_.action,
       jsonpCallbackProperty: 'c',  // change this to whatever MailChimp expects
       successMessageElem: this.formElem_.parentNode.querySelector('.js-success-message'),
       errorMessageElem: this.formElem_.parentNode.querySelector('.js-error-message'),
-      translateFunction: function(str) { return str; },
-      onSuccessCallback: null,
-      onErrorCallback: null
+      translateFunction: function(str) { return str; },  // pass your own translate function if you want translations
+      onSuccessCallback: null,  // pass your own success callback to handle successful submits yourself
+      onErrorCallback: null,  // pass your own error callback to handle submit errors yourself
+      onBeforeSubmitCallback: null,  // for e.g. setting loading state
+      onTimeoutCallback: null,  // for JSONP calls we don't get any error handling, so you can use this as "fallback"
+      timeout: 5000,
+      autoInit: false
     };
-    this.options_.generalSuccessMessage = this.options_.successMessageElem.getAttribute(
-      'data-general-message'
-    );
-    this.options_.generalErrorMessage = this.options_.errorMessageElem.getAttribute(
-      'data-general-message'
-    );
+
+    // extend `options` with `customOptions`, if it's passed
+    if (customOptions && typeof(customOptions) === 'object') {
+      for (var i in customOptions) {
+        if (customOptions.hasOwnProperty(i)) {
+          this.options_[i] = customOptions[i];
+        }
+      }
+    }
+
+    if (this.options_.successMessageElem) {
+      this.options_.generalSuccessMessage = this.options_.successMessageElem.getAttribute(
+        'data-general-message'
+      );
+    } else {
+      this.options_.generalSuccessMessage = null;
+    }
+
+    if (this.options_.errorMessageElem) {
+      this.options_.generalErrorMessage = this.options_.errorMessageElem.getAttribute(
+        'data-general-message'
+      );
+    } else {
+      this.options_.generalErrorMessage = null;
+    }
 
     // ensure we use the MailChimp JSON endpoint
     if (this.options_.url.indexOf('/subscribe/post') !== -1 &&
@@ -41,13 +65,8 @@
       );
     }
 
-    // extend `options` with `customOptions`, if it's passed
-    if (customOptions && typeof(customOptions) === 'object') {
-      for (var i in customOptions) {
-        if (customOptions.hasOwnProperty(i)) {
-          this.options_[i] = customOptions[i];
-        }
-      }
+    if (this.options_.autoInit) {
+      this.init();
     }
   };
 
@@ -80,12 +99,32 @@
     var dataObj = MailChimpSubscribeForm.utils.serializeForm(this.formElem_);
     var url = MailChimpSubscribeForm.utils.appendQueryString(this.options_.url, dataObj);
 
+    if (typeof(this.options_.onTimeoutCallback) === 'function') {
+      this.timeoutObj_ = setTimeout(function() {
+        this_.options_.onTimeoutCallback.call(null, url, this_.options_);
+        clearTimeout(this_.timeoutObj_);
+        this_.timeoutObj_ = null;
+      }, this.options_.timeout);
+    }
+
+    if (typeof(this.options_.onBeforeSubmitCallback) === 'function') {
+      this.options_.onBeforeSubmitCallback.call(null, url, this.options_);
+    }
+
     MailChimpSubscribeForm.utils.loadJSON(url, {
       jsonpCallbackProperty: this.options_.jsonpCallbackProperty,
       onSuccess: function() {
+        if (this_.timeoutObj_) {
+          clearTimeout(this_.timeoutObj_);
+          this_.timeoutObj_ = null;
+        }
         this_.onSuccess_.apply(this_, arguments);
       },
       onError: function() {
+        if (this_.timeoutObj_) {
+          clearTimeout(this_.timeoutObj_);
+          this_.timeoutObj_ = null;
+        }
         this_.onError_.apply(this_, arguments);
       }
     });
@@ -121,11 +160,10 @@
     if (hasError) {
       this.onError_(null, message);
     } else {
-      this.setSuccessMessage_(message);
-
       if (typeof(this.options_.onSuccessCallback) === 'function') {
         this.options_.onSuccessCallback.call(null, message);
       } else {
+        this.setSuccessMessage_(message);
         this.setUI_(false);
       }
     }
@@ -137,11 +175,10 @@
    * @param {String} errorMessage
    */
   MailChimpSubscribeForm.prototype.onError_ = function(request, errorMessage) {
-    this.setErrorMessage_(errorMessage);
-
     if (typeof(this.options_.onErrorCallback) === 'function') {
       this.options_.onErrorCallback.call(null, request, errorMessage);
     } else {
+      this.setErrorMessage_(errorMessage);
       this.setUI_(true);
     }
   };
@@ -171,6 +208,10 @@
       message = this.options_.generalSuccessMessage;
     }
 
+    if (!message || !this.options_.successMessageElem) {
+      return;
+    }
+
     if (this.options_.translateFunction) {
       this.options_.successMessageElem.innerHTML = this.options_.translateFunction(message);
     } else {
@@ -185,6 +226,10 @@
   MailChimpSubscribeForm.prototype.setErrorMessage_ = function(message) {
     if (!message) {
       message = this.options_.generalErrorMessage;
+    }
+
+    if (!message || !this.options_.errorMessageElem) {
+      return;
     }
 
     if (this.options_.translateFunction) {
@@ -276,11 +321,6 @@
         if (qStrObj.hasOwnProperty(i)) {
           qStrArr.push(i + '=' + qStrObj[i]);
         }
-      }
-
-      // ensure trailing slash for http(s) URLs
-      if (urlParts[0].replace(/https?:\/\//g, '').indexOf('/') !== -1) {
-        urlParts[0] += '/';
       }
 
       return [
