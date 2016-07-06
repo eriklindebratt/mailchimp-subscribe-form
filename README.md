@@ -49,7 +49,10 @@ Instantiate MailChimpSubscribeForm for each subscription form element:
 ```javascript
 var elems = document.querySelectorAll('.js-subscribe-form');
 for (var i = 0; i < elems.length; i++) {
-  new MailChimpSubscribeForm(elems[i]);
+  var options = {
+    autoInit: true
+  };
+  new MailChimpSubscribeForm(elems[i], options);
 }
 ```
 
