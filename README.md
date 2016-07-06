@@ -62,7 +62,9 @@ You can also pass custom options as the second argument to
   jsonpCallbackProperty: 'c',  // change this to whatever MailChimp expects
   successMessageElem: this.formElem_.parentNode.querySelector('.js-success-message'),
   errorMessageElem: this.formElem_.parentNode.querySelector('.js-error-message'),
-  translateFunction: function(str) { return str; }  // pass your own translate function if you want translations
+  translateFunction: function(str) { return str; },  // pass your own translate function if you want translations
+  onSuccessCallback: null,  // pass your own success callback to handle a successful submit yourself
+  onErrorCallback: null  // pass your own error callback to handle submit errors yourself
 }
 ```
 
